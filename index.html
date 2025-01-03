@@ -1,0 +1,165 @@
+<!doctype><html><head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>consum casa</title>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    td{
+      padding:0;
+    }
+    [numero]{
+      font-family:monospace;
+      text-align:right;
+    }
+    [center]{
+      text-align:center;
+    }
+    [off=true]{
+      color:#aaa;
+    }
+  </style>
+</head><body>
+<div id=app>
+  <b>
+    Càlcul ràpid consum casa
+    <input type=number v-model="contractat_kW" numero style="width:5em" step="0.1" min=0> kW contractats
+  </b>
+
+  <div
+    style="
+      margin-top:8px;
+      display:flex;
+      flex-wrap:no-wrap;
+    "
+  >
+    <!--aparells-->
+    <div>
+      <table border=1>
+        <tr>
+          <th>aparells ({{aparells.length}})</th>
+          <th colspan=1>
+            consum
+            <button @click="unitat_W^=1" style="font-size:x-small">
+              ({{unitat_W?'W':'kW'}})
+            </button>
+          </th>
+          <th>
+            <button @click="toggle_tots()" title="on/off tots">
+              <img src="img/onoff-switch.png" style="width:12px">
+            </button>
+          </th>
+        </tr>
+        <tr v-for="apa in aparells">
+          <td>{{apa.nom}}</td>
+          <td numero :off="apa.consum_kW==0">
+            {{(unitat_W ? 1000:1)*apa.consum_kW}}
+            {{unitat_W ? "W":"kW"}}
+          </td>
+          <td :style="{background:apa.on?'gold':''}" center>
+            <button @click="apa.on^=1" title="on/off">
+              <img src="img/onoff-switch.png" style="width:12px">
+            </button>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!--resultat-->
+    <div style="margin-left:5px">
+      <table border=1>
+        <tr>
+          <th>consum total (kW)</th>
+          <td numero center
+            :style="{background:suma_potencia_kW>contractat_kW?'red':'#af0'}"
+          >
+            {{suma_potencia_kW.toFixed(1)}} kW
+          </td>
+        </tr>
+        <tr>
+          <th>
+            <span v-if="excés_kW>=0">disponible</span>
+            <span v-else>excés</span>
+            (kW)
+          </th>
+          <td numero center>
+            {{Math.abs(excés_kW).toFixed(1)}} kW
+          </td>
+        </tr>
+        <tr>
+          <td style="font-size:smaller">combinacions possibles</td>
+          <td numero center>
+            2<sup>{{aparells.length}}</sup> =
+            {{Math.pow(2,aparells.length)}}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  class Aparell{
+    constructor(nom,consum_kW){
+      this.nom           = nom;
+      this.consum_kW_max = consum_kW;
+      this.on            = false;
+    }
+    get consum_kW(){
+      return this.on ? this.consum_kW_max : 0;
+    }
+  }
+
+  let aparells=[
+    new Aparell("nevera",           0.1),
+    new Aparell("TV",               0.1),
+    new Aparell("altaveus",         0.280),
+    new Aparell("bomba calor AC",   4.0),
+
+    new Aparell("escalfador aigua", 2.0),
+
+    new Aparell("estufa elèctrica", 2.0),
+    new Aparell("forn elèctric",    2.0),
+
+    new Aparell("rentaplats",       1.5),
+    new Aparell("rentadora",        1.5),
+    new Aparell("motor piscina",    0.5),
+
+    new Aparell("torradora",        0.8),
+    new Aparell("microones",        0.9),
+  ];
+
+  let app = Vue.createApp({
+    data(){return{
+      aparells,
+
+      contractat_kW:2.5,
+
+      unitat_W:1, //veure en Watts o kiloWatts
+    }},
+    methods:{
+      set_tots(nou_valor){
+        this.aparells.forEach(a=>a.on=nou_valor);
+      },
+      toggle_tots(){
+        if(this.aparells.every(ap=>ap.on==false)){
+          this.set_tots(1);
+        }else{
+          this.set_tots(0);
+        }
+      },
+    },
+    computed:{
+      suma_potencia_kW(){
+        return this.aparells
+          .map(a=>a.consum_kW)
+          .reduce((p,c)=>p+c,0)
+        ;
+      },
+      excés_kW(){
+        return this.contractat_kW - this.suma_potencia_kW;
+      },
+    },
+  }).mount("#app");
+</script>
