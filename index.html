@@ -74,7 +74,7 @@
           <td numero center
             :style="{background:suma_potencia_kW>contractat_kW?'red':'#af0'}"
           >
-            {{suma_potencia_kW.toFixed(1)}} kW
+            {{suma_potencia_kW.toFixed(2)}} kW
           </td>
         </tr>
         <tr>
@@ -84,7 +84,7 @@
             (kW)
           </th>
           <td numero center>
-            {{Math.abs(excés_kW).toFixed(1)}} kW
+            {{Math.abs(excés_kW).toFixed(2)}} kW
           </td>
         </tr>
         <tr>
@@ -133,9 +133,7 @@
   let app = Vue.createApp({
     data(){return{
       aparells,
-
       contractat_kW:2.5,
-
       unitat_W:1, //veure en Watts o kiloWatts
     }},
     methods:{
